@@ -3,3 +3,7 @@ Output
 *.swp
 *.o
 a.out
+target
+*.ll
+*.png
+*.dot

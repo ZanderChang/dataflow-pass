@@ -11,6 +11,7 @@ static atomic_int total_store, tainted_store, clean_store;
 
 #define DF_LOG(format, args...) fprintf(stderr, "DF_RUNTIME: " format"\n", ##args)
 #define INCREASE(number) atomic_fetch_add_explicit(&number, 1, memory_order_relaxed)
+
 void df_init(void *ptr, size_t size)
 {
     src_label = dfsan_create_label("src", 0);
@@ -20,6 +21,7 @@ void df_init(void *ptr, size_t size)
     total_load = tainted_load = clean_load = 0;
     total_store = tainted_store = clean_store = 0;
 }
+
 void df_stat()
 {
     DF_LOG("total %d load, %d tainted, %d clean",
@@ -27,6 +29,7 @@ void df_stat()
     DF_LOG("total %d store, %d tainted, %d clean",
             total_store, tainted_store, clean_store);
 }
+
 void __loadcheck(unsigned char *ptr, size_t size,
         const char* file, size_t line) {
     dfsan_label temp = dfsan_read_label(ptr, size);
@@ -43,6 +46,7 @@ void __loadcheck(unsigned char *ptr, size_t size,
             size);
     return;
 }
+
 void __storecheck(unsigned char *ptr, size_t size,
         const char *file, size_t line) {
     dfsan_label temp = dfsan_read_label(ptr, size);

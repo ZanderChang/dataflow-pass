@@ -112,11 +112,11 @@ bool InstrumentMemoryAccesses::runOnFunction(Function &F) {
 //
 void InstrumentMemoryAccesses::instrument(Value *Pointer, Value *AccessSize,
         Function *Check, Instruction &I) {
-    Builder->SetInsertPoint(I.getNextNode());
+    Builder->SetInsertPoint(I.getNextNode()); // behind of I
     Value *VoidPointer = Builder->CreatePointerCast(Pointer, VoidPtrTy);
-    //errs() << "instrument instruction " << I << "\n";
-    //errs() << "Pointer: " << *Pointer << "\n";
-    //errs() << "Size: " << *AccessSize << "\n";
+    // errs() << "instrument instruction " << I << "\n";
+    // errs() << "Pointer: " << *Pointer << "\n";
+    // errs() << "Size: " << *AccessSize << "\n";
     //errs() << Check->getName();
     //errs() << "load/store/atomic/intrinsics: " << LoadsInstrumented
     //       << "/" << StoresInstrumented
@@ -212,3 +212,49 @@ static void registerPass(const PassManagerBuilder &,
 static RegisterStandardPasses
   RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
                  registerPass);
+
+
+// instrument instruction   store i32 0, i32* %retval, align 4
+// Pointer:   %retval = alloca i32, align 4
+// Size: i64 4
+// [!] No debug info for instruction "  store i32 0, i32* %retval, align 4" you won't get valid file:line messages
+
+// instrument instruction   call void @llvm.memset.p0i8.i64(i8* align 16 %1, i8 0, i64 256, i1 false), !dbg !13
+// Pointer:   %src = alloca [256 x i8], align 16
+// Size: i64 256
+
+// instrument instruction   store i8 1, i8* %4, align 16, !dbg !13
+// Pointer:   %4 = getelementptr inbounds <{ i8, [255 x i8] }>, <{ i8, [255 x i8] }>* %3, i32 0, i32 0, !dbg !13
+// Size: i64 1
+
+// instrument instruction   call void @llvm.memset.p0i8.i64(i8* align 16 %5, i8 0, i64 256, i1 false), !dbg !20
+// Pointer:   %dst = alloca [256 x i8], align 16
+// Size: i64 256
+
+// instrument instruction   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 %arraydecay1, i8* align 16 %arraydecay2, i64 128, i1 false), !dbg !23
+// Pointer:   %src = alloca [256 x i8], align 16
+// Size: i64 128
+// instrument instruction   call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 %arraydecay1, i8* align 16 %arraydecay2, i64 128, i1 false), !dbg !23
+// Pointer:   %dst = alloca [256 x i8], align 16
+// Size: i64 128
+
+// instrument instruction   %9 = load i8, i8* %arrayidx, align 16, !dbg !26
+// Pointer:   %arrayidx = getelementptr inbounds [256 x i8], [256 x i8]* %dst, i64 0, i64 0, !dbg !26
+// Size: i64 1
+// instrument instruction   store i8 %9, i8* %temp, align 1, !dbg !27
+// Pointer:   %temp = alloca i8, align 1
+// Size: i64 1
+
+// instrument instruction   %10 = load i8, i8* %arrayidx3, align 1, !dbg !28
+// Pointer:   %arrayidx3 = getelementptr inbounds [256 x i8], [256 x i8]* %dst, i64 0, i64 127, !dbg !28
+// Size: i64 1
+// instrument instruction   store i8 %10, i8* %temp, align 1, !dbg !29
+// Pointer:   %temp = alloca i8, align 1
+// Size: i64 1
+
+// instrument instruction   %11 = load i8, i8* %arrayidx4, align 16, !dbg !30
+// Pointer:   %arrayidx4 = getelementptr inbounds [256 x i8], [256 x i8]* %dst, i64 0, i64 128, !dbg !30
+// Size: i64 1
+// instrument instruction   store i8 %11, i8* %temp, align 1, !dbg !31
+// Pointer:   %temp = alloca i8, align 1
+// Size: i64 1
