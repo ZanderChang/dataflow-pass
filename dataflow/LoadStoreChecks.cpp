@@ -75,7 +75,7 @@ bool InstrumentMemoryAccesses::doInitialization(Module &M) {
     FunctionType *LoadStoreFuncType = FunctionType::get(VoidTy,params,false);
     M.getOrInsertFunction("__loadcheck", LoadStoreFuncType);
     M.getOrInsertFunction("__storecheck", LoadStoreFuncType);
-    errs() << "doInitialization done \n";
+    errs() << "[+] doInitialization done \n";
     return true;
 }
 
@@ -134,7 +134,7 @@ void InstrumentMemoryAccesses::instrument(Value *Pointer, Value *AccessSize,
         RtFile = Builder->CreateGlobalStringPtr(loc->getFilename().str().c_str(), ".str");
         RtLine = ConstantInt::get(SizeTy, Line);
     } else {
-        errs() << "No debug info for instruction \""
+        errs() << "[!] No debug info for instruction \""
             << I << "\" you won't get valid file:line messages\n";
     }
 

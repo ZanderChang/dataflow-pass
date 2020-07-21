@@ -1,10 +1,10 @@
 # dataflow pass
 
-A trivial LLVM pass that instruct tainted memory access with [DFSsan][dfsan].
+A trivial LLVM pass that instruct tainted memory access with [DFSan][dfsan].
 
 ## Requirement:
 
-- LLVM 3.8 or later
+- LLVM 8.0.1
 - clang
 - compiler-rt (dataflow sanitizer)
 - lit (for running test suite)
@@ -20,7 +20,7 @@ make
 ## Simple example
 
 As for target source `example/target.c`
-```text
+```c
 1	#include <string.h>
 2	#include "runtime.h"
 3	#define MAXSIZE 256
@@ -39,20 +39,18 @@ As for target source `example/target.c`
 16	}
 ```
 
-1). compile target source with clang
+1) compile target source with clang
 ```bash
 cd example
-clang -g -fsanitize=dataflow -std=c11 -Xclang -load \
--Xclang ../build/dataflow/libLoadStorePass.so -I../dataflow/runtime -c target.c -o target.o
+clang -g -fsanitize=dataflow -std=c11 -Xclang -load -Xclang ../build/dataflow/libLoadStorePass.so -c target.c -o target.o
 ```
 
-2). compile runtime library
+2) compile runtime library
 ```bash
-clang -g -fsanitize=dataflow ../dataflow/runtime/runtime.c \
--I../dataflow/runtime -c -o runtime.o
+clang -g -fsanitize=dataflow runtime.c -c -o runtime.o
 ```
 
-3). and link them together
+3) and link them together
 ```bash
 clang -fsanitize=dataflow target.o runtime.o -o target
 ```
@@ -74,14 +72,6 @@ DF_RUNTIME: target.c:13: clean load 1 byte(s)
 DF_RUNTIME: target.c:13: clean store 1 byte(s)
 DF_RUNTIME: total 4 load, 3 tainted, 1 clean
 DF_RUNTIME: total 4 store, 3 tainted, 1 clean
-```
-
-
-## Run tests:
-
-```bash
-lit --show-tests dataflow/test
-lit -j8 dataflow/test
 ```
 
 
